@@ -44,8 +44,10 @@ class SpecialisteController extends Controller
             'firstname' => 'required|string|max:255',
             'picture' => 'required|string|max:255',
             'job' => 'required|string|max:255',
-            'short_description' => 'required|string|max:255',
+            'short_description' => 'nullable|string|max:255',
         ]);
+
+        $validated['short_description'] = $validated['short_description'] ?? '';
 
         Specialiste::create($validated);
 
@@ -67,7 +69,7 @@ class SpecialisteController extends Controller
             'firstname' => 'required|string|max:255',
             'picture' => 'required|string|max:255',
             'job' => 'required|string|max:255',
-            'short_description' => 'required|string|max:255',
+            'short_description' => 'nullable|string|max:255',
         ]);
 
         $specialiste->update($validated);
