@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\AProposController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\FileUploadController;
+use App\Http\Controllers\Admin\ContactController;
 use Illuminate\Support\Facades\Route;
 
 // Explicit model bindings for resource routes
@@ -45,6 +46,11 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::get('/a-propos', [AProposController::class, 'index'])->name('a-propos.index');
     Route::get('/a-propos/{aPropos}/edit', [AProposController::class, 'edit'])->name('a-propos.edit');
     Route::put('/a-propos/{aPropos}', [AProposController::class, 'update'])->name('a-propos.update');
+
+    // Contacts (read-only + delete)
+    Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
+    Route::get('/contacts/{contact}', [ContactController::class, 'show'])->name('contacts.show');
+    Route::delete('/contacts/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
 
     // Settings
     Route::get('/parametres', [SettingsController::class, 'index'])->name('parametres.index');

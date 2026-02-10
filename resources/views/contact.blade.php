@@ -153,22 +153,33 @@
                             <form class="contact-form" method="POST" id="contact-form" action="{{ route('contact.submit') }}">
                                 @csrf
                                 <input type="hidden" name="form_time" value="{{ now()->timestamp }}">
-                                <input type="text" name="{{ $honeypotName }}" style="display:none;">
+                                <!-- Honeypot: hidden from humans, bots will fill it -->
+                                <div aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;opacity:0;height:0;width:0;overflow:hidden;">
+                                    <label for="{{ $honeypotName }}">Ne pas remplir</label>
+                                    <input type="text" name="{{ $honeypotName }}" id="{{ $honeypotName }}" tabindex="-1" autocomplete="off" value="">
+                                </div>
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <input type="text" class="form-control" placeholder="Votre nom *" name="name" required>
+                                        <input type="text" class="form-control" placeholder="Votre nom *" name="name" value="{{ old('name') }}" required>
                                     </div>
                                     <div class="col-md-6">
-                                        <input type="email" class="form-control" placeholder="Votre e-mail *" name="email" required>
+                                        <input type="email" class="form-control" placeholder="Votre e-mail *" name="email" value="{{ old('email') }}" required>
                                     </div>
                                     <div class="col-md-6">
-                                        <input type="tel" class="form-control" placeholder="Votre téléphone *" name="phone" required>
+                                        <input type="tel" class="form-control" placeholder="Votre téléphone *" name="phone" value="{{ old('phone') }}" required>
                                     </div>
                                     <div class="col-md-6">
-                                        <input type="text" class="form-control" placeholder="Sujet" name="subject" required>
+                                        <input type="text" class="form-control" placeholder="Sujet" name="subject" value="{{ old('subject') }}" required>
                                     </div>
                                     <div class="col-md-12">
-                                        <textarea name="message" cols="40" rows="10" class="form-control" placeholder="Message" required></textarea>
+                                        <textarea name="message" cols="40" rows="10" class="form-control" placeholder="Message" required>{{ old('message') }}</textarea>
+                                    </div>
+                                    <div class="col-md-12" style="margin-bottom: 15px;">
+                                        <label for="antirobot" style="font-weight: 600; margin-bottom: 5px; display: block;">{{ $antirobotQuestion }}</label>
+                                        <input type="number" class="form-control" name="antirobot" id="antirobot" placeholder="Votre réponse" required style="max-width: 200px;">
+                                        @error('antirobot')
+                                            <div style="color: #dc3545; font-size: 14px; margin-top: 5px;">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                     <div class="col-md-12">
                                         <button class="pbmit-btn">
