@@ -495,7 +495,7 @@ server {
         return 404;
     }
 
-    location ~ /\. {
+    location ~ /\.(?!well-known).* {
         deny all;
     }
 }
@@ -539,7 +539,7 @@ server {
         return 404;
     }
 
-    location ~ /\. {
+    location ~ /\.(?!well-known).* {
         deny all;
     }
 
@@ -686,11 +686,16 @@ NGINX;
 
     private function requireCommand(string $cmd): void
     {
-        $code = 0;
-        system("command -v " . escapeshellarg($cmd) . " >/dev/null 2>&1", $code);
-        if ($code !== 0) {
+        if (!$this->isCommandAvailable($cmd)) {
             throw new RuntimeException("Missing required command: {$cmd}");
         }
+    }
+
+    private function isCommandAvailable(string $cmd): bool
+    {
+        $code = 0;
+        system("command -v " . escapeshellarg($cmd) . " >/dev/null 2>&1", $code);
+        return $code === 0;
     }
 
     private function sudo(string $cmd): string
