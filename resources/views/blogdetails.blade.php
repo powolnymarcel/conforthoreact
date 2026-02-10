@@ -11,6 +11,25 @@
             margin: 0 auto; /* Center the image horizontally */
         }
 
+        .blog-detail-featured-image {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .blog-detail-featured-image img {
+            width: 100%;
+            max-width: 980px;
+            height: auto;
+            border-radius: 12px;
+        }
+
+        @media (max-width: 767.98px) {
+            .blog-detail-featured-image {
+                margin-top: 1.25rem;
+            }
+        }
+
     </style>
     <!-- Contact Us Content -->
     <div class="page-content">
@@ -41,6 +60,20 @@
                                             <div class="pbmit-entry-content">
                                                 {!! $blog->content  !!}
                                             </div>
+                                            @if(!empty($blog->image))
+                                                @php
+                                                    $storageImage = asset('storage/' . ltrim($blog->image, '/'));
+                                                    $publicImage = asset(ltrim($blog->image, '/'));
+                                                @endphp
+                                                <div class="blog-detail-featured-image">
+                                                    <img
+                                                        src="{{ $storageImage }}"
+                                                        alt="{{ $blog->title }}"
+                                                        loading="lazy"
+                                                        onerror="this.onerror=null;this.src='{{ $publicImage }}';"
+                                                    >
+                                                </div>
+                                            @endif
 
                                         </div>
                                     </div>
@@ -58,4 +91,3 @@
     <!-- Contact Us Content End -->
 
 @endsection
-
