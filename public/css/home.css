@@ -108,3 +108,42 @@
 .specialties-image li a:hover {
     background: #e2e6ea;
 }
+
+/* Home services slider: keep all slide images visually consistent */
+#pbmit-service-scroll .swiper-slide {
+    height: auto;
+}
+
+#pbmit-service-scroll .pbmit-service-style-2,
+#pbmit-service-scroll .pbmit-service-style-2 .pbminfotech-post-item,
+#pbmit-service-scroll .pbmit-service-style-2 .pbminfotech-box-content {
+    height: 100%;
+}
+
+#pbmit-service-scroll .pbmit-service-style-2 .pbmit-featured-wrapper {
+    aspect-ratio: 4 / 3;
+    min-height: 220px;
+    background-color: #f4f7fb;
+}
+
+#pbmit-service-scroll .pbmit-service-style-2 .pbmit-service-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+}
+
+@media (max-width: 991.98px) {
+    #pbmit-service-scroll .pbmit-service-style-2 .pbmit-featured-wrapper {
+        aspect-ratio: 16 / 11;
+        min-height: 200px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    #pbmit-service-scroll .pbmit-service-style-2 .pbmit-featured-wrapper {
+        aspect-ratio: 1 / 1;
+        min-height: 180px;
+    }
+}
