@@ -1,6 +1,7 @@
 @php
     $s = fn(string $key, string $default = '') => $allSettings[$key] ?? $default;
     $days = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+    $todayIndex = (int) date('N') - 1; // 0=lundi ... 6=dimanche
 @endphp
 
 <footer class="site-footer">
@@ -71,11 +72,17 @@
                             {{ $s('contact.address1.phone', '04 263 53 73') }}
                         </a>
                     </p>
-                    <h6 class="footer-subheading mt-3">Horaires</h6>
-                    <ul class="footer-hours">
-                        @foreach($days as $day)
+                    <h6 class="footer-hours-toggle mt-3" onclick="toggleHours(this)">
+                        <span class="toggle-icon">&#9654;</span> Horaires
+                    </h6>
+                    <ul class="footer-hours" style="display:none;">
+                        @foreach($days as $i => $day)
                             @if($s("horaires.chenee.$day"))
-                                <li><span class="day">{{ ucfirst($day) }}</span> <span class="hours">{{ $s("horaires.chenee.$day") }}</span></li>
+                                <li class="{{ $i === $todayIndex ? 'today' : '' }}">
+                                    @if($i === $todayIndex)<span class="pulse-dot"></span>@endif
+                                    <span class="day">{{ ucfirst($day) }}</span>
+                                    <span class="hours">{{ $s("horaires.chenee.$day") }}</span>
+                                </li>
                             @endif
                         @endforeach
                     </ul>
@@ -94,11 +101,17 @@
                             {{ $s('contact.address2.phone', '084 43 37 40') }}
                         </a>
                     </p>
-                    <h6 class="footer-subheading mt-3">Horaires</h6>
-                    <ul class="footer-hours">
-                        @foreach($days as $day)
+                    <h6 class="footer-hours-toggle mt-3" onclick="toggleHours(this)">
+                        <span class="toggle-icon">&#9654;</span> Horaires
+                    </h6>
+                    <ul class="footer-hours" style="display:none;">
+                        @foreach($days as $i => $day)
                             @if($s("horaires.marche.$day"))
-                                <li><span class="day">{{ ucfirst($day) }}</span> <span class="hours">{{ $s("horaires.marche.$day") }}</span></li>
+                                <li class="{{ $i === $todayIndex ? 'today' : '' }}">
+                                    @if($i === $todayIndex)<span class="pulse-dot"></span>@endif
+                                    <span class="day">{{ ucfirst($day) }}</span>
+                                    <span class="hours">{{ $s("horaires.marche.$day") }}</span>
+                                </li>
                             @endif
                         @endforeach
                     </ul>
@@ -188,11 +201,29 @@
         border-bottom: 2px solid #0d6efd;
         display: inline-block;
     }
-    .footer-subheading {
+    /* Hours toggle */
+    .footer-hours-toggle {
         color: #ffffff;
         font-weight: 600;
         font-size: 0.95rem;
         margin-bottom: 0.5rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        user-select: none;
+        transition: color 0.2s ease;
+    }
+    .footer-hours-toggle:hover {
+        color: #0d6efd;
+    }
+    .footer-hours-toggle .toggle-icon {
+        display: inline-block;
+        font-size: 0.7rem;
+        transition: transform 0.3s ease;
+    }
+    .footer-hours-toggle.open .toggle-icon {
+        transform: rotate(90deg);
     }
     .footer-logo {
         max-height: 50px;
@@ -233,15 +264,33 @@
         padding: 0;
         margin: 0;
         font-size: 0.85rem;
+        overflow: hidden;
+        transition: max-height 0.4s ease, opacity 0.3s ease;
     }
     .footer-hours li {
         display: flex;
+        align-items: center;
         justify-content: space-between;
-        padding: 0.15rem 0;
+        padding: 0.2rem 0;
         border-bottom: 1px solid rgba(255,255,255,0.06);
+        position: relative;
     }
     .footer-hours li:last-child {
         border-bottom: none;
+    }
+    .footer-hours li.today {
+        background-color: rgba(13,110,253,0.1);
+        border-radius: 4px;
+        padding-left: 0.4rem;
+        padding-right: 0.3rem;
+    }
+    .footer-hours li.today .day {
+        color: #4db8ff;
+        font-weight: 700;
+    }
+    .footer-hours li.today .hours {
+        color: #ffffff;
+        font-weight: 600;
     }
     .footer-hours .day {
         color: #ffffff;
@@ -251,6 +300,24 @@
     .footer-hours .hours {
         color: #a0b4cb;
         text-align: right;
+    }
+
+    /* Green pulse dot */
+    .pulse-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #22c55e;
+        margin-right: 0.4rem;
+        flex-shrink: 0;
+        animation: pulse-green 1.5s ease-in-out infinite;
+        box-shadow: 0 0 0 0 rgba(34,197,94,0.6);
+    }
+    @keyframes pulse-green {
+        0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
+        70% { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+        100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
     }
 
     /* Links */
@@ -321,3 +388,28 @@
         }
     }
 </style>
+
+<script>
+function toggleHours(el) {
+    var list = el.nextElementSibling;
+    if (!list) return;
+    var isOpen = el.classList.contains('open');
+    if (isOpen) {
+        list.style.maxHeight = list.scrollHeight + 'px';
+        list.offsetHeight; // force reflow
+        list.style.maxHeight = '0';
+        list.style.opacity = '0';
+        setTimeout(function() { list.style.display = 'none'; }, 400);
+        el.classList.remove('open');
+    } else {
+        list.style.display = '';
+        list.style.maxHeight = '0';
+        list.style.opacity = '0';
+        list.offsetHeight; // force reflow
+        list.style.maxHeight = list.scrollHeight + 'px';
+        list.style.opacity = '1';
+        el.classList.add('open');
+        setTimeout(function() { list.style.maxHeight = 'none'; }, 400);
+    }
+}
+</script>

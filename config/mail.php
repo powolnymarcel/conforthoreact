@@ -113,4 +113,18 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Contact Notification Recipients
+    |--------------------------------------------------------------------------
+    |
+    | Comma-separated email recipients notified when a contact form message
+    | is received.
+    |
+    */
+    'contact_recipients' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('MAIL_CONTACT_RECIPIENTS', ''))
+    ))),
+
 ];

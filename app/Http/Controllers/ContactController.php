@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ContactMessageReceived;
 use App\Models\Contact;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ContactController extends Controller
 {
@@ -43,13 +46,30 @@ class ContactController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
-        Contact::create([
+        $contact = Contact::create([
             'name' => $request->name,
             'email' => $request->email,
             'subject' => $request->subject,
             'phone' => $request->phone,
             'message' => $request->message,
         ]);
+
+        $recipients = array_values(array_filter(
+            (array) config('mail.contact_recipients', []),
+            static fn ($email) => is_string($email) && filter_var($email, FILTER_VALIDATE_EMAIL)
+        ));
+
+        if (!empty($recipients)) {
+            try {
+                Mail::to($recipients)->send(new ContactMessageReceived($contact));
+            } catch (\Throwable $exception) {
+                Log::error('Contact notification email failed.', [
+                    'contact_id' => $contact->id,
+                    'recipients' => $recipients,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
 
         // Clear session tokens
         session()->forget(['honeypot_field', 'antirobot_answer']);
