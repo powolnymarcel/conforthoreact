@@ -58,7 +58,7 @@ export default function AdminLayout({ children, title }: { children: ReactNode; 
             )}>
                 <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
                     <Link href="/admin" className="text-lg font-bold text-sidebar-primary">
-                        Admin Panel
+                        Admin Confortho
                     </Link>
                     <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-sidebar-foreground hover:text-white">
                         <X className="h-5 w-5" />
