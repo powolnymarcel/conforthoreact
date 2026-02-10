@@ -11,11 +11,16 @@ interface FileUploadProps {
     preview?: boolean;
 }
 
+function extractFilename(path: string): string {
+    return path.split('/').pop() || path;
+}
+
 export function FileUpload({ value, onChange, accept = 'image/*', label, preview = true }: FileUploadProps) {
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [originalFilename, setOriginalFilename] = useState<string | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
     const isImage = accept.includes('image');
@@ -27,6 +32,7 @@ export function FileUpload({ value, onChange, accept = 'image/*', label, preview
         if (!file) return;
 
         setError(null);
+        setOriginalFilename(file.name);
 
         // Show preview for images
         if (isImage && file.type.startsWith('image/')) {
@@ -90,6 +96,7 @@ export function FileUpload({ value, onChange, accept = 'image/*', label, preview
     const handleRemove = () => {
         onChange('');
         setPreviewUrl(null);
+        setOriginalFilename(null);
         if (inputRef.current) inputRef.current.value = '';
     };
 
@@ -105,7 +112,7 @@ export function FileUpload({ value, onChange, accept = 'image/*', label, preview
                     ) : (
                         <div className="flex items-center gap-2 rounded-md border p-3">
                             <FileIcon className="h-8 w-8 text-muted-foreground" />
-                            <span className="text-sm text-muted-foreground truncate max-w-[200px]">{value}</span>
+                            <span className="text-sm text-muted-foreground truncate max-w-[200px]">{originalFilename || extractFilename(value!)}</span>
                         </div>
                     )}
                     <button

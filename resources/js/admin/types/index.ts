@@ -68,7 +68,9 @@ export interface Pro {
     category: string;
     subtitle: string | null;
     file_1: string;
+    file_1_visible: boolean;
     file_2: string;
+    file_2_visible: boolean;
     external_link: string | null;
     image: string;
     created_at: string;
