@@ -56,8 +56,8 @@
 
 
                                             <!-- File download buttons -->
+                                            @if($pro->file_1 && $pro->file_1_visible)
                                             <div class="pbmit-service-files">
-                                                @if($pro->file_1)
                                                     <div class="item-download">
                                                         <a href="{{ asset('storage/' . $pro->file_1) }}" target="_blank" rel="noopener noreferrer" download>
                                         <span class="pbmit-download-content">
@@ -68,11 +68,11 @@
                                         </span>
                                                         </a>
                                                     </div>
-                                                @endif
                                             </div>
+                                            @endif
 
+                                            @if($pro->file_2 && $pro->file_2_visible)
                                                     <div class="pbmit-service-files">
-                                                        @if($pro->file_2)
                                                             <div class="item-download">
                                                                 <a href="{{ asset('storage/' . $pro->file_2) }}" target="_blank" rel="noopener noreferrer" download>
                                         <span class="pbmit-download-content">
@@ -83,8 +83,8 @@
                                         </span>
                                                                 </a>
                                                             </div>
-                                                        @endif
                                             </div>
+                                            @endif
                                         </div>
                                     </div>
 
