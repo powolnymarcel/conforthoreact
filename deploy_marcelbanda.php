@@ -25,6 +25,9 @@ final class DeployMarcelBanda
     private bool $autoDbProvision = true;
     private bool $regenDb = false;
     private string $dumpPath = '';
+    private bool $autoHttps = true;
+    private string $certbotEmail = '';
+    private bool $installCertbotIfMissing = true;
     private bool $isRoot = false;
 
     public function __construct(array $argv)
@@ -47,6 +50,10 @@ final class DeployMarcelBanda
 
         if (!$this->isRoot) {
             $this->requireCommand('sudo');
+        }
+
+        if ($this->autoHttps && !$this->hasTlsCertificate() && $this->installCertbotIfMissing) {
+            $this->ensureCertbotInstalled();
         }
 
         $this->phpFpmSock = $this->detectPhpFpmSocket($this->phpFpmSock);
@@ -96,6 +103,10 @@ final class DeployMarcelBanda
         $this->runCmd($this->sudo("nginx -t"));
         $this->runCmd($this->sudo("systemctl reload nginx"));
 
+        if ($this->autoHttps) {
+            $this->ensureHttpsReady();
+        }
+
         $this->probeSite();
         $this->log("Deploy finished.");
     }
@@ -113,6 +124,14 @@ final class DeployMarcelBanda
             }
             if ($arg === '--regen-db') {
                 $this->regenDb = true;
+                continue;
+            }
+            if ($arg === '--skip-https') {
+                $this->autoHttps = false;
+                continue;
+            }
+            if ($arg === '--no-certbot-install') {
+                $this->installCertbotIfMissing = false;
                 continue;
             }
             if (strpos($arg, '--domain=') === 0) {
@@ -140,6 +159,10 @@ final class DeployMarcelBanda
                 $this->dumpPath = substr($arg, strlen('--dump='));
                 continue;
             }
+            if (strpos($arg, '--certbot-email=') === 0) {
+                $this->certbotEmail = substr($arg, strlen('--certbot-email='));
+                continue;
+            }
             if ($arg === '--help' || $arg === '-h') {
                 $this->printHelp();
                 exit(0);
@@ -155,6 +178,9 @@ final class DeployMarcelBanda
         echo "  --skip-db                 Skip automatic DB provisioning/import\n";
         echo "  --regen-db                Force new random DB/user/password and reimport dump\n";
         echo "  --dump=...                Dump path (default: database/dump.sql or current_db_dump.sql)\n";
+        echo "  --skip-https              Skip HTTPS certificate + SSL nginx setup\n";
+        echo "  --certbot-email=...       Email for Let's Encrypt registration\n";
+        echo "  --no-certbot-install      Do not auto-install certbot if missing\n";
         echo "  --domain=...              Domain (default: {$this->domain})\n";
         echo "  --www-domain=...          WWW domain (default: {$this->wwwDomain})\n";
         echo "  --repo=...                Git URL (default: {$this->repoUrl})\n";
@@ -374,6 +400,65 @@ final class DeployMarcelBanda
             throw new RuntimeException("Cannot write {$path}");
         }
         @chmod($path, 0600);
+    }
+
+    private function hasTlsCertificate(): bool
+    {
+        $certFullchain = "/etc/letsencrypt/live/{$this->domain}/fullchain.pem";
+        $certPrivkey = "/etc/letsencrypt/live/{$this->domain}/privkey.pem";
+        return is_file($certFullchain) && is_file($certPrivkey);
+    }
+
+    private function ensureCertbotInstalled(): void
+    {
+        if ($this->isCommandAvailable('certbot')) {
+            return;
+        }
+
+        if (!$this->isCommandAvailable('apt-get')) {
+            throw new RuntimeException('certbot is missing and apt-get is not available.');
+        }
+
+        $this->log('Installing certbot...');
+        $this->runCmd($this->sudo('apt-get update'));
+        $this->runCmd($this->sudo('DEBIAN_FRONTEND=noninteractive apt-get install -y certbot python3-certbot-nginx'));
+    }
+
+    private function obtainLetsEncryptCertificate(): void
+    {
+        if (!$this->isCommandAvailable('certbot')) {
+            throw new RuntimeException('certbot is not installed. Re-run without --no-certbot-install or install certbot manually.');
+        }
+
+        $emailArg = $this->certbotEmail !== ''
+            ? '--email ' . escapeshellarg($this->certbotEmail)
+            : '--register-unsafely-without-email';
+
+        $cmd = $this->sudo(
+            'certbot certonly --nginx --non-interactive --agree-tos --keep-until-expiring ' .
+            $emailArg . ' -d ' . escapeshellarg($this->domain) . ' -d ' . escapeshellarg($this->wwwDomain)
+        );
+
+        $this->runCmd($cmd);
+    }
+
+    private function ensureHttpsReady(): void
+    {
+        if ($this->hasTlsCertificate()) {
+            $this->log('TLS certificate found.');
+        } else {
+            $this->log('TLS certificate not found. Requesting Let\'s Encrypt certificate...');
+            $this->obtainLetsEncryptCertificate();
+        }
+
+        if (!$this->hasTlsCertificate()) {
+            throw new RuntimeException("HTTPS certificate still missing for {$this->domain}.");
+        }
+
+        $this->writeNginxConfig();
+        $this->enableNginxSite();
+        $this->runCmd($this->sudo("nginx -t"));
+        $this->runCmd($this->sudo("systemctl reload nginx"));
     }
 
     private function writeNginxConfig(): void
