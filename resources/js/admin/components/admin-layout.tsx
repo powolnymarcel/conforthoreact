@@ -2,7 +2,7 @@ import { Link, usePage, router } from '@inertiajs/react';
 import { useState, type ReactNode } from 'react';
 import {
     LayoutDashboard, Users, Image, Briefcase, FolderTree, Package,
-    ScrollText, Newspaper, Info, Settings, LogOut, Menu, X, ChevronLeft,
+    Newspaper, Info, Settings, LogOut, Menu, X, ChevronLeft,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -22,8 +22,7 @@ const navItems: NavItem[] = [
     { label: 'Professionnels', href: '/admin/professionnels', icon: Briefcase, routePrefix: '/admin/professionnels' },
     { label: 'Catégories produits', href: '/admin/categories', icon: FolderTree, routePrefix: '/admin/categories' },
     { label: 'Produits', href: '/admin/produits', icon: Package, routePrefix: '/admin/produits' },
-    { label: 'Déroulants', href: '/admin/deroulants', icon: ScrollText, routePrefix: '/admin/deroulants' },
-    { label: 'Actualités', href: '/admin/actualites', icon: Newspaper, routePrefix: '/admin/actualites' },
+{ label: 'Actualités', href: '/admin/actualites', icon: Newspaper, routePrefix: '/admin/actualites' },
     { label: 'À propos', href: '/admin/a-propos', icon: Info, routePrefix: '/admin/a-propos' },
     { label: 'Paramètres', href: '/admin/parametres', icon: Settings, routePrefix: '/admin/parametres' },
 ];
