@@ -55,7 +55,12 @@
 </script>
 @endpush
 
+@section('extra-css')
+    <link rel="stylesheet" href="{{ asset('css/home.css') }}">
+@endsection
+
 @section('content')
+    <h1 class="sr-only">Confortho - Bandagisterie et Orthopédie à Chênée et Marche-en-Famenne</h1>
     <div class="pbmit-slider-area pbmit-slider-six">
         <div class="swiper-slider" data-autoplay="true" data-loop="true" data-dots="true" data-arrows="false" data-columns="1" data-margin="0" data-effect="fade">
             <div class="swiper-wrapper">
@@ -168,28 +173,6 @@
                         </span>
                                                     </a>
                                                 </div>
-                                                <style>
-                                                    .pbmit-contant-box {
-                                                        position: relative;
-                                                        padding: 20px; /* Add some spacing */
-                                                        background-color: rgba(172, 170, 170, 0.55); /* Light semi-transparent background */
-                                                        border-radius: 8px; /* Rounded corners for a smoother look */
-                                                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4); /* Optional shadow for contrast */
-                                                    }
-
-                                                    .pbmit-contant-box h3,
-                                                    .pbmit-contant-box a {
-                                                        color: #333; /* Use a dark color for text */
-                                                        text-decoration: none; /* Remove underline from links */
-                                                    }
-
-                                                    .pbmit-contant-box:hover {
-                                                        background-color: rgba(255, 255, 255, 1); /* Make the background fully opaque on hover */
-                                                        transform: scale(1.02); /* Optional hover effect */
-                                                        transition: all 0.3s ease;
-                                                    }
-
-                                                </style>
                                                 <div class="pbmit-contant-box">
                                                     <div class="pbmit-service-icon elementor-icon">
                                                         <i class="pbmit-xcare-icon pbmit-xcare-icon-gesundheit-1"></i>
