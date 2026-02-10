@@ -12,9 +12,7 @@ class SettingsController extends Controller
     public function index()
     {
         $settings = [];
-        $allSettings = Setting::all();
-
-        foreach ($allSettings as $setting) {
+        foreach (Setting::all() as $setting) {
             $settings[$setting->key] = $setting->value;
         }
 
@@ -30,10 +28,7 @@ class SettingsController extends Controller
         ]);
 
         foreach ($data['settings'] as $key => $value) {
-            Setting::updateOrCreate(
-                ['key' => $key],
-                ['value' => $value]
-            );
+            Setting::set($key, $value);
         }
 
         return redirect()->route('admin.parametres.index')
