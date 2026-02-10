@@ -2,6 +2,37 @@
 
 @section('title', 'Accueil - Confortho')
 
+@section('extra-css')
+    <style>
+        .blog-listing-page .pbmit-blog-style-1 .pbmit-featured-wrapper {
+            aspect-ratio: 16 / 10;
+            min-height: 240px;
+        }
+
+        .blog-listing-page .pbmit-blog-style-1 .pbmit-featured-wrapper img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        @media (max-width: 991.98px) {
+            .blog-listing-page .pbmit-blog-style-1 .pbmit-featured-wrapper {
+                aspect-ratio: 4 / 3;
+                min-height: 200px;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .blog-listing-page .pbmit-blog-style-1 .pbmit-featured-wrapper {
+                aspect-ratio: 1 / 1;
+                min-height: 170px;
+            }
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="pbmit-title-bar-wrapper" style="background-image: url(/blog.jpg);">
         <div class="container">
@@ -28,7 +59,7 @@
         </div>
     </div>
     <!-- Contact Us Content -->
-    <div class="page-content">
+    <div class="page-content blog-listing-page">
 
         <!-- Blog Grid Col 2 -->
         <section class="section-lgx">

@@ -2,7 +2,7 @@ import { Link, usePage, router } from '@inertiajs/react';
 import { useState, type ReactNode } from 'react';
 import {
     LayoutDashboard, Users, Image, Briefcase, FolderTree, Package,
-    Newspaper, Info, Settings, LogOut, Menu, X, ChevronLeft, MessageSquare,
+    Newspaper, Info, Settings, LogOut, Menu, X, MessageSquare, ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -87,6 +87,17 @@ export default function AdminLayout({ children, title }: { children: ReactNode; 
                                 </li>
                             );
                         })}
+                        <li>
+                            <a
+                                href="https://bandagisterie-confortho.be/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                            >
+                                <ExternalLink className="h-4 w-4 shrink-0" />
+                                Voir le site
+                            </a>
+                        </li>
                     </ul>
                 </nav>
                 <div className="border-t border-sidebar-border p-4">
