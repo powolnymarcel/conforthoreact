@@ -221,7 +221,9 @@ Route::get('/blog/{slug}', function () {
     $slides = Slide::all();
     $categoriesproducts = ProductCategory::orderBy('title', 'asc')->get();
     $specialistes = \App\Models\Specialiste::get();
-    $blogarticles = \App\Models\Blog::orderBy('date', 'asc')->get();
+    $blogarticles = \App\Models\Blog::orderBy('date', 'desc')
+        ->orderBy('id', 'desc')
+        ->get();
     $deroulants = \App\Models\Deroulant::get();
 
     $setting5=\App\Models\Setting::whereId(5)->get();
