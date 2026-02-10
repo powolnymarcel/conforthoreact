@@ -75,13 +75,28 @@ export function FileUpload({ value, onChange, accept = 'image/*', label, preview
 
         xhr.onload = () => {
             setUploading(false);
-            if (xhr.status === 200) {
-                const response = JSON.parse(xhr.responseText);
-                onChange(response.path);
-            } else {
-                setError('Erreur lors de l\'upload du fichier.');
-                setPreviewUrl(null);
+            let response: any = null;
+            try {
+                response = JSON.parse(xhr.responseText || '{}');
+            } catch {
+                response = null;
             }
+
+            const uploadedPath = response?.path;
+            if ((xhr.status === 200 || xhr.status === 201) && typeof uploadedPath === 'string' && uploadedPath.length > 0) {
+                onChange(uploadedPath);
+                return;
+            }
+
+            const backendError =
+                response?.message ||
+                response?.error ||
+                response?.errors?.file?.[0] ||
+                'Erreur lors de l\'upload du fichier.';
+
+            setError(backendError);
+            setPreviewUrl(null);
+            onChange('');
         };
 
         xhr.onerror = () => {
