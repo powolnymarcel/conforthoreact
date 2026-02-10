@@ -46,7 +46,7 @@ export interface Specialiste {
     firstname: string;
     picture: string;
     job: string;
-    short_description?: string;
+    short_description: string;
     created_at: string;
     updated_at: string;
 }

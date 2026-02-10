@@ -14,6 +14,7 @@ export default function Edit({ specialiste }: { specialiste: Specialiste }) {
         firstname: specialiste.firstname,
         picture: specialiste.picture,
         job: specialiste.job,
+        short_description: specialiste.short_description,
     });
 
     const submit = (e: React.FormEvent) => {
@@ -53,6 +54,11 @@ export default function Edit({ specialiste }: { specialiste: Specialiste }) {
                                 <Label htmlFor="job">Fonction</Label>
                                 <Input id="job" value={data.job} onChange={(e) => setData('job', e.target.value)} />
                                 {errors.job && <p className="text-sm text-destructive">{errors.job}</p>}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="short_description">Description courte</Label>
+                                <Input id="short_description" value={data.short_description} onChange={(e) => setData('short_description', e.target.value)} />
+                                {errors.short_description && <p className="text-sm text-destructive">{errors.short_description}</p>}
                             </div>
                             <Button type="submit" disabled={processing}>
                                 {processing && <Loader2 className="h-4 w-4 animate-spin mr-2" />}

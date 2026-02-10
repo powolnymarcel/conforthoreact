@@ -17,6 +17,7 @@ class Specialiste extends Model
         'firstname',
         'picture',
         'job',
+        'short_description',
     ];
 
     protected static function boot()
