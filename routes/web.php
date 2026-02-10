@@ -270,10 +270,19 @@ Route::get('/contact', function () {
     $section2= \App\Models\Section2::all();
     $section3= \App\Models\Section3::all();
     $section4= \App\Models\Section4::all();
-    $honeypotName = 'honeypot_' . Str::random(5);
+
+    // Honeypot: store dynamic field name in session
+    $honeypotName = 'hp_' . Str::random(8);
+    session(['honeypot_field' => $honeypotName]);
+
+    // Anti-robot math challenge
+    $a = rand(1, 9);
+    $b = rand(1, 9);
+    session(['antirobot_answer' => $a + $b]);
 
     return view('contact', [
         'honeypotName' => $honeypotName,
+        'antirobotQuestion' => "Combien font $a + $b ?",
         'setting5' => $setting5,
         'setting6' => $setting6,
         'setting7' => $setting7,
