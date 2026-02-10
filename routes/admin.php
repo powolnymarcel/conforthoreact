@@ -14,6 +14,10 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\FileUploadController;
 use Illuminate\Support\Facades\Route;
 
+// Explicit model bindings for resource routes
+Route::model('professionnel', \App\Models\Pro::class);
+Route::model('actualite', \App\Models\Blog::class);
+
 // Auth routes (no admin middleware)
 Route::get('/admin/login', [AuthController::class, 'showLogin'])->name('admin.login');
 Route::post('/admin/login', [AuthController::class, 'login'])->name('admin.login.submit');
