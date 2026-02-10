@@ -42,11 +42,16 @@ export function FileUpload({ value, onChange, accept = 'image/*', label, preview
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '/admin/upload');
 
-        // Get CSRF token
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-            || document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1];
-        if (csrfToken) {
-            xhr.setRequestHeader('X-XSRF-TOKEN', decodeURIComponent(csrfToken));
+        // Get CSRF token from meta tag (plain token → X-CSRF-TOKEN)
+        const metaCsrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (metaCsrf) {
+            xhr.setRequestHeader('X-CSRF-TOKEN', metaCsrf);
+        } else {
+            // Fallback: encrypted cookie → X-XSRF-TOKEN
+            const cookieCsrf = document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1];
+            if (cookieCsrf) {
+                xhr.setRequestHeader('X-XSRF-TOKEN', decodeURIComponent(cookieCsrf));
+            }
         }
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         xhr.setRequestHeader('Accept', 'application/json');

@@ -29,6 +29,8 @@ final class DeployMarcelBanda
     private string $certbotEmail = '';
     private bool $installCertbotIfMissing = true;
     private bool $includeWebshellSnippet = false;
+    private string $tlsFullchainPath = '';
+    private string $tlsPrivkeyPath = '';
     private bool $isRoot = false;
 
     public function __construct(array $argv)
@@ -45,6 +47,9 @@ final class DeployMarcelBanda
         $this->requireCommand('npm');
         $this->requireCommand('nginx');
         $this->requireCommand('curl');
+        if ($this->autoHttps) {
+            $this->requireCommand('openssl');
+        }
         if ($this->autoDbProvision) {
             $this->requireCommand('mysql');
         }
@@ -410,9 +415,13 @@ final class DeployMarcelBanda
 
     private function hasTlsCertificate(): bool
     {
-        $certFullchain = "/etc/letsencrypt/live/{$this->domain}/fullchain.pem";
-        $certPrivkey = "/etc/letsencrypt/live/{$this->domain}/privkey.pem";
-        return is_file($certFullchain) && is_file($certPrivkey);
+        $paths = $this->resolveTlsCertificatePaths();
+        if ($paths === null) {
+            return false;
+        }
+        $this->tlsFullchainPath = $paths['fullchain'];
+        $this->tlsPrivkeyPath = $paths['privkey'];
+        return true;
     }
 
     private function ensureCertbotInstalled(): void
@@ -452,6 +461,20 @@ final class DeployMarcelBanda
         );
 
         $this->runCmd($cmd);
+
+        if ($this->resolveTlsCertificatePaths() !== null) {
+            return;
+        }
+
+        $this->log('Matching certificate not found after keep-until-expiring, forcing dedicated cert issuance...');
+        $forceCmd = $this->sudo(
+            'certbot certonly --webroot -w ' . escapeshellarg($webroot) .
+            ' --non-interactive --agree-tos --force-renewal --cert-name ' . escapeshellarg($this->domain) . ' ' .
+            $emailArg .
+            ' -d ' . escapeshellarg($this->domain) .
+            ' -d ' . escapeshellarg($this->wwwDomain)
+        );
+        $this->runCmd($forceCmd);
     }
 
     private function ensureHttpsReady(): void
@@ -473,10 +496,50 @@ final class DeployMarcelBanda
         $this->runCmd($this->sudo("systemctl reload nginx"));
     }
 
+    /**
+     * @return array{fullchain:string,privkey:string}|null
+     */
+    private function resolveTlsCertificatePaths(): ?array
+    {
+        $defaultFullchain = "/etc/letsencrypt/live/{$this->domain}/fullchain.pem";
+        $defaultPrivkey = "/etc/letsencrypt/live/{$this->domain}/privkey.pem";
+        if (
+            is_file($defaultFullchain) &&
+            is_file($defaultPrivkey) &&
+            $this->certificateCoversDomains($defaultFullchain)
+        ) {
+            return ['fullchain' => $defaultFullchain, 'privkey' => $defaultPrivkey];
+        }
+
+        foreach (glob('/etc/letsencrypt/live/*/fullchain.pem') ?: [] as $fullchain) {
+            $privkey = dirname($fullchain) . '/privkey.pem';
+            if (!is_file($privkey)) {
+                continue;
+            }
+            if ($this->certificateCoversDomains($fullchain)) {
+                return ['fullchain' => $fullchain, 'privkey' => $privkey];
+            }
+        }
+
+        return null;
+    }
+
+    private function certificateCoversDomains(string $fullchainPath): bool
+    {
+        $cmd = 'openssl x509 -in ' . escapeshellarg($fullchainPath) . ' -noout -ext subjectAltName 2>/dev/null';
+        $out = shell_exec($cmd);
+        if (!is_string($out) || $out === '') {
+            return false;
+        }
+
+        $san = str_replace(["\r", "\n", ' '], '', $out);
+        return str_contains($san, 'DNS:' . $this->domain) && str_contains($san, 'DNS:' . $this->wwwDomain);
+    }
+
     private function writeNginxConfig(): void
     {
-        $certFullchain = "/etc/letsencrypt/live/{$this->domain}/fullchain.pem";
-        $certPrivkey = "/etc/letsencrypt/live/{$this->domain}/privkey.pem";
+        $certFullchain = $this->tlsFullchainPath !== '' ? $this->tlsFullchainPath : "/etc/letsencrypt/live/{$this->domain}/fullchain.pem";
+        $certPrivkey = $this->tlsPrivkeyPath !== '' ? $this->tlsPrivkeyPath : "/etc/letsencrypt/live/{$this->domain}/privkey.pem";
         $certOptions = "/etc/letsencrypt/options-ssl-nginx.conf";
         $certDhparam = "/etc/letsencrypt/ssl-dhparams.pem";
         $webshellSnippet = "/etc/nginx/snippets/block-webshells.conf";
