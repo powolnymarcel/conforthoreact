@@ -28,6 +28,7 @@ final class DeployMarcelBanda
     private bool $autoHttps = true;
     private string $certbotEmail = '';
     private bool $installCertbotIfMissing = true;
+    private bool $includeWebshellSnippet = false;
     private bool $isRoot = false;
 
     public function __construct(array $argv)
@@ -134,6 +135,10 @@ final class DeployMarcelBanda
                 $this->installCertbotIfMissing = false;
                 continue;
             }
+            if ($arg === '--with-webshell-snippet') {
+                $this->includeWebshellSnippet = true;
+                continue;
+            }
             if (strpos($arg, '--domain=') === 0) {
                 $this->domain = substr($arg, strlen('--domain='));
                 continue;
@@ -181,6 +186,7 @@ final class DeployMarcelBanda
         echo "  --skip-https              Skip HTTPS certificate + SSL nginx setup\n";
         echo "  --certbot-email=...       Email for Let's Encrypt registration\n";
         echo "  --no-certbot-install      Do not auto-install certbot if missing\n";
+        echo "  --with-webshell-snippet   Include /etc/nginx/snippets/block-webshells.conf\n";
         echo "  --domain=...              Domain (default: {$this->domain})\n";
         echo "  --www-domain=...          WWW domain (default: {$this->wwwDomain})\n";
         echo "  --repo=...                Git URL (default: {$this->repoUrl})\n";
@@ -434,9 +440,15 @@ final class DeployMarcelBanda
             ? '--email ' . escapeshellarg($this->certbotEmail)
             : '--register-unsafely-without-email';
 
+        $webroot = $this->appDir . '/public';
+        $this->runCmd($this->sudo('mkdir -p ' . escapeshellarg($webroot . '/.well-known/acme-challenge')));
+
         $cmd = $this->sudo(
-            'certbot certonly --nginx --non-interactive --agree-tos --keep-until-expiring ' .
-            $emailArg . ' -d ' . escapeshellarg($this->domain) . ' -d ' . escapeshellarg($this->wwwDomain)
+            'certbot certonly --webroot -w ' . escapeshellarg($webroot) .
+            ' --non-interactive --agree-tos --keep-until-expiring ' .
+            $emailArg .
+            ' -d ' . escapeshellarg($this->domain) .
+            ' -d ' . escapeshellarg($this->wwwDomain)
         );
 
         $this->runCmd($cmd);
@@ -469,7 +481,9 @@ final class DeployMarcelBanda
         $certDhparam = "/etc/letsencrypt/ssl-dhparams.pem";
         $webshellSnippet = "/etc/nginx/snippets/block-webshells.conf";
 
-        $webshellInclude = is_file($webshellSnippet) ? "    include {$webshellSnippet};\n" : '';
+        $webshellInclude = ($this->includeWebshellSnippet && is_file($webshellSnippet))
+            ? "    include {$webshellSnippet};\n"
+            : '';
         $hasCert = is_file($certFullchain) && is_file($certPrivkey);
 
         $httpOnly = <<<NGINX
@@ -479,6 +493,11 @@ server {
     server_name {$this->domain} {$this->wwwDomain};
 {$webshellInclude}    root {$this->appDir}/public;
     index index.php index.html;
+
+    location ^~ /.well-known/acme-challenge/ {
+        allow all;
+        root {$this->appDir}/public;
+    }
 
     location / {
         try_files \$uri \$uri/ /index.php?\$query_string;
@@ -516,6 +535,11 @@ server {
 
 {$webshellInclude}    root {$this->appDir}/public;
     index index.php index.html;
+
+    location ^~ /.well-known/acme-challenge/ {
+        allow all;
+        root {$this->appDir}/public;
+    }
 
     location / {
         try_files \$uri \$uri/ /index.php?\$query_string;
@@ -656,8 +680,28 @@ NGINX;
     private function probeSite(): void
     {
         $url = 'https://' . $this->domain . '/';
-        $cmd = "curl -kI --resolve " . escapeshellarg("{$this->domain}:443:127.0.0.1") . " " . escapeshellarg($url) . " | head -n 1";
-        $this->runCmd($cmd, true);
+        $cmd = "curl -ksSI --resolve " . escapeshellarg("{$this->domain}:443:127.0.0.1") . " " . escapeshellarg($url);
+        $headers = shell_exec($cmd);
+
+        if (!is_string($headers) || $headers === '') {
+            $this->log('Probe skipped (no response).');
+            return;
+        }
+
+        $statusLine = strtok($headers, "\n");
+        if (is_string($statusLine)) {
+            $this->log('Probe: ' . trim($statusLine));
+        }
+
+        if (preg_match('/^location:\s*(.+)$/im', $headers, $m) === 1) {
+            $location = trim($m[1]);
+            $this->log('Probe location: ' . $location);
+            if (stripos($location, 'becomebyloud.com') !== false) {
+                throw new RuntimeException(
+                    "Domain redirecting to becomebyloud.com. Check conflicting nginx vhosts and SSL cert mapping."
+                );
+            }
+        }
     }
 
     private function currentUserGroup(): string
