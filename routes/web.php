@@ -308,3 +308,89 @@ Route::get('/politique-de-confidentialite', function () {
     return view('politique-confidentialite');
 })->name('politique.confidentialite');
 
+Route::get('/sitemap.xml', function () {
+    $now = now()->toAtomString();
+
+    $formatDate = static function ($value) use ($now): string {
+        if ($value instanceof DateTimeInterface) {
+            return $value->format(DATE_ATOM);
+        }
+
+        if (is_string($value) && $value !== '') {
+            $timestamp = strtotime($value);
+            if ($timestamp !== false) {
+                return gmdate(DATE_ATOM, $timestamp);
+            }
+        }
+
+        return $now;
+    };
+
+    $escape = static function (string $value): string {
+        return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+    };
+
+    $urls = [
+        ['loc' => url('/'), 'lastmod' => $now, 'changefreq' => 'weekly', 'priority' => '1.0'],
+        ['loc' => route('competences'), 'lastmod' => $now, 'changefreq' => 'weekly', 'priority' => '0.9'],
+        ['loc' => route('professionnels'), 'lastmod' => $now, 'changefreq' => 'weekly', 'priority' => '0.8'],
+        ['loc' => route('propos'), 'lastmod' => $now, 'changefreq' => 'monthly', 'priority' => '0.8'],
+        ['loc' => route('blog'), 'lastmod' => $now, 'changefreq' => 'daily', 'priority' => '0.8'],
+        ['loc' => route('contact'), 'lastmod' => $now, 'changefreq' => 'monthly', 'priority' => '0.7'],
+        ['loc' => route('conditions.generales'), 'lastmod' => $now, 'changefreq' => 'yearly', 'priority' => '0.4'],
+        ['loc' => route('politique.confidentialite'), 'lastmod' => $now, 'changefreq' => 'yearly', 'priority' => '0.4'],
+    ];
+
+    foreach (ProductCategory::query()->whereNotNull('slug')->get(['slug', 'updated_at']) as $category) {
+        $urls[] = [
+            'loc' => route('competencesdetails', ['slug' => $category->slug]),
+            'lastmod' => $formatDate($category->updated_at),
+            'changefreq' => 'weekly',
+            'priority' => '0.7',
+        ];
+    }
+
+    foreach (
+        Product::query()
+            ->join('product_categories', 'product_categories.id', '=', 'products.product_category_id')
+            ->whereNotNull('products.slug')
+            ->whereNotNull('product_categories.slug')
+            ->select('products.slug as product_slug', 'product_categories.slug as category_slug', 'products.updated_at')
+            ->get() as $product
+    ) {
+        $urls[] = [
+            'loc' => route('produitdetails', [
+                'slug' => $product->category_slug,
+                'slugprod' => $product->product_slug,
+            ]),
+            'lastmod' => $formatDate($product->updated_at),
+            'changefreq' => 'weekly',
+            'priority' => '0.6',
+        ];
+    }
+
+    foreach (Blog::query()->whereNotNull('slug')->get(['slug', 'updated_at', 'date']) as $article) {
+        $urls[] = [
+            'loc' => route('blog.details', ['slug' => $article->slug]),
+            'lastmod' => $formatDate($article->updated_at ?: $article->date),
+            'changefreq' => 'monthly',
+            'priority' => '0.7',
+        ];
+    }
+
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+
+    foreach ($urls as $item) {
+        $xml .= "  <url>\n";
+        $xml .= '    <loc>' . $escape($item['loc']) . "</loc>\n";
+        $xml .= '    <lastmod>' . $escape($item['lastmod']) . "</lastmod>\n";
+        $xml .= '    <changefreq>' . $escape($item['changefreq']) . "</changefreq>\n";
+        $xml .= '    <priority>' . $escape($item['priority']) . "</priority>\n";
+        $xml .= "  </url>\n";
+    }
+
+    $xml .= "</urlset>\n";
+
+    return response($xml, 200)->header('Content-Type', 'application/xml; charset=UTF-8');
+});

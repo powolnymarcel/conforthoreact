@@ -152,7 +152,7 @@
                 <ul class="list-unstyled">
                     <li><a href="{{ route('conditions.generales') }}" class="footer-text-color text-decoration-none">Conditions générales</a></li>
                     <li><a href="{{ route('politique.confidentialite') }}" class="footer-text-color text-decoration-none">Politique de confidentialité</a></li>
-                    <li><a href="#" class="footer-text-color text-decoration-none">Contact</a></li>
+                    <li><a href="{{ route('contact') }}" class="footer-text-color text-decoration-none">Contact</a></li>
                 </ul>
             </div>
         </div>
@@ -160,7 +160,7 @@
         <!-- Footer Bottom: Copyright -->
         <div class="border-top pt-3 text-center">
             <p class="mb-0 small footer-text-color">
-                Copyright © 2024 <a href="#" class="footer-text-color fw-bold">Confortho</a>. Tous droits réservés.
+                Copyright © {{ date('Y') }} <a href="{{ route('home') }}" class="footer-text-color fw-bold">Confortho</a>. Tous droits réservés.
             </p>
         </div>
     </div>
