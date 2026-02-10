@@ -18,5 +18,14 @@ class AdminUserSeeder extends Seeder
                 'is_admin' => true,
             ]
         );
+
+        User::updateOrCreate(
+            ['email' => 'deborah@confortho.eu'],
+            [
+                'name' => 'Deborah',
+                'password' => Hash::make('motdeP@s342!d'),
+                'is_admin' => true,
+            ]
+        );
     }
 }
