@@ -22,6 +22,9 @@ final class DeployMarcelBanda
     private string $nginxEnabledPath = '/etc/nginx/sites-enabled/bandagisterie-confortho';
     private string $phpFpmSock = '';
     private bool $runMigrations = false;
+    private bool $autoDbProvision = true;
+    private bool $regenDb = false;
+    private string $dumpPath = '';
     private bool $isRoot = false;
 
     public function __construct(array $argv)
@@ -38,6 +41,9 @@ final class DeployMarcelBanda
         $this->requireCommand('npm');
         $this->requireCommand('nginx');
         $this->requireCommand('curl');
+        if ($this->autoDbProvision) {
+            $this->requireCommand('mysql');
+        }
 
         if (!$this->isRoot) {
             $this->requireCommand('sudo');
@@ -58,6 +64,9 @@ final class DeployMarcelBanda
 
         $this->runCmd("cd " . escapeshellarg($this->appDir) . " && test -f .env || cp .env.example .env");
         $this->prepareLaravelCacheDirs();
+        if ($this->autoDbProvision) {
+            $this->provisionDatabaseFromDump();
+        }
 
         $this->runCmd("cd " . escapeshellarg($this->appDir) . " && composer install --no-dev --optimize-autoloader --no-interaction");
         $this->runCmd("cd " . escapeshellarg($this->appDir) . " && npm ci");
@@ -98,6 +107,14 @@ final class DeployMarcelBanda
                 $this->runMigrations = true;
                 continue;
             }
+            if ($arg === '--skip-db') {
+                $this->autoDbProvision = false;
+                continue;
+            }
+            if ($arg === '--regen-db') {
+                $this->regenDb = true;
+                continue;
+            }
             if (strpos($arg, '--domain=') === 0) {
                 $this->domain = substr($arg, strlen('--domain='));
                 continue;
@@ -119,6 +136,10 @@ final class DeployMarcelBanda
                 $this->phpFpmSock = substr($arg, strlen('--php-fpm-sock='));
                 continue;
             }
+            if (strpos($arg, '--dump=') === 0) {
+                $this->dumpPath = substr($arg, strlen('--dump='));
+                continue;
+            }
             if ($arg === '--help' || $arg === '-h') {
                 $this->printHelp();
                 exit(0);
@@ -131,6 +152,9 @@ final class DeployMarcelBanda
         echo "Usage: php deploy_marcelbanda.php [options]\n\n";
         echo "Options:\n";
         echo "  --migrate                 Run php artisan migrate --force\n";
+        echo "  --skip-db                 Skip automatic DB provisioning/import\n";
+        echo "  --regen-db                Force new random DB/user/password and reimport dump\n";
+        echo "  --dump=...                Dump path (default: database/dump.sql or current_db_dump.sql)\n";
         echo "  --domain=...              Domain (default: {$this->domain})\n";
         echo "  --www-domain=...          WWW domain (default: {$this->wwwDomain})\n";
         echo "  --repo=...                Git URL (default: {$this->repoUrl})\n";
@@ -171,6 +195,185 @@ final class DeployMarcelBanda
             }
         }
         @touch("{$this->appDir}/storage/logs/laravel.log");
+    }
+
+    private function provisionDatabaseFromDump(): void
+    {
+        $existingDb = $this->getEnvValue('DB_DATABASE');
+        $existingUser = $this->getEnvValue('DB_USERNAME');
+        $existingPass = $this->getEnvValue('DB_PASSWORD');
+
+        if (
+            !$this->regenDb &&
+            $existingDb !== '' &&
+            $existingUser !== '' &&
+            $existingPass !== ''
+        ) {
+            $this->log("Existing DB credentials found in .env, skipping DB provisioning. Use --regen-db to rotate.");
+            return;
+        }
+
+        $dumpFile = $this->resolveDumpFile();
+        $dbName = 'banda_' . substr(bin2hex(random_bytes(8)), 0, 12);
+        $dbUser = 'u_' . substr(bin2hex(random_bytes(8)), 0, 14);
+        $dbPass = substr(bin2hex(random_bytes(18)), 0, 28);
+
+        $this->log("Creating random MySQL database/user...");
+        $sql = implode("\n", [
+            "CREATE DATABASE `{$dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;",
+            "CREATE USER '{$dbUser}'@'localhost' IDENTIFIED BY '{$dbPass}';",
+            "CREATE USER '{$dbUser}'@'%' IDENTIFIED BY '{$dbPass}';",
+            "GRANT ALL PRIVILEGES ON `{$dbName}`.* TO '{$dbUser}'@'localhost';",
+            "GRANT ALL PRIVILEGES ON `{$dbName}`.* TO '{$dbUser}'@'%';",
+            "FLUSH PRIVILEGES;",
+        ]);
+        $this->runCmd($this->sudo("mysql -e " . escapeshellarg($sql)));
+
+        $this->log("Importing dump into {$dbName} from {$dumpFile} ...");
+        $this->runCmd(
+            $this->sudo(
+                "mysql --default-character-set=utf8mb4 " .
+                escapeshellarg($dbName) .
+                " < " . escapeshellarg($dumpFile)
+            )
+        );
+
+        $this->setEnvValues([
+            'APP_URL' => 'https://' . $this->domain,
+            'DB_CONNECTION' => 'mysql',
+            'DB_HOST' => '127.0.0.1',
+            'DB_PORT' => '3306',
+            'DB_DATABASE' => $dbName,
+            'DB_USERNAME' => $dbUser,
+            'DB_PASSWORD' => $dbPass,
+        ]);
+
+        $this->writeDbCredentialsFile($dbName, $dbUser, $dbPass, $dumpFile);
+        $this->log("DB_DATABASE={$dbName}");
+        $this->log("DB_USERNAME={$dbUser}");
+        $this->log("DB_PASSWORD={$dbPass}");
+        $this->log("Database ready. Credentials saved in {$this->appDir}/.deploy-db-credentials.txt");
+    }
+
+    private function resolveDumpFile(): string
+    {
+        $candidates = [];
+
+        if ($this->dumpPath !== '') {
+            if (str_starts_with($this->dumpPath, '/')) {
+                $candidates[] = $this->dumpPath;
+            } else {
+                $candidates[] = $this->appDir . '/' . ltrim($this->dumpPath, '/');
+            }
+        } else {
+            $candidates[] = $this->appDir . '/database/dump.sql';
+            $candidates[] = $this->appDir . '/current_db_dump.sql';
+        }
+
+        foreach ($candidates as $file) {
+            if (is_file($file) && is_readable($file)) {
+                return $file;
+            }
+        }
+
+        throw new RuntimeException(
+            'No SQL dump found. Expected: ' .
+            implode(' or ', $candidates)
+        );
+    }
+
+    private function getEnvValue(string $key): string
+    {
+        $envPath = $this->appDir . '/.env';
+        if (!is_file($envPath)) {
+            return '';
+        }
+        $content = file_get_contents($envPath);
+        if (!is_string($content) || $content === '') {
+            return '';
+        }
+
+        if (!preg_match('/^' . preg_quote($key, '/') . '=(.*)$/m', $content, $m)) {
+            return '';
+        }
+
+        $raw = trim($m[1]);
+        if ($raw === 'null' || $raw === '(null)' || $raw === '') {
+            return '';
+        }
+        if (
+            (str_starts_with($raw, '"') && str_ends_with($raw, '"')) ||
+            (str_starts_with($raw, "'") && str_ends_with($raw, "'"))
+        ) {
+            return substr($raw, 1, -1);
+        }
+        return $raw;
+    }
+
+    /**
+     * @param array<string,string> $values
+     */
+    private function setEnvValues(array $values): void
+    {
+        $envPath = $this->appDir . '/.env';
+        $content = file_get_contents($envPath);
+        if (!is_string($content)) {
+            throw new RuntimeException("Cannot read {$envPath}");
+        }
+
+        $lines = preg_split('/\r\n|\n|\r/', rtrim($content, "\r\n")) ?: [];
+        $found = array_fill_keys(array_keys($values), false);
+
+        foreach ($lines as &$line) {
+            foreach ($values as $key => $value) {
+                if (preg_match('/^\s*' . preg_quote($key, '/') . '\s*=/', $line) === 1) {
+                    $line = $key . '=' . $this->formatEnvValue($value);
+                    $found[$key] = true;
+                    break;
+                }
+            }
+        }
+        unset($line);
+
+        foreach ($values as $key => $value) {
+            if (!$found[$key]) {
+                $lines[] = $key . '=' . $this->formatEnvValue($value);
+            }
+        }
+
+        $newContent = implode(PHP_EOL, $lines) . PHP_EOL;
+        if (file_put_contents($envPath, $newContent) === false) {
+            throw new RuntimeException("Cannot write {$envPath}");
+        }
+    }
+
+    private function formatEnvValue(string $value): string
+    {
+        if (preg_match('/^[A-Za-z0-9_\\-\\.]+$/', $value) === 1) {
+            return $value;
+        }
+        return '"' . addcslashes($value, "\\\"$") . '"';
+    }
+
+    private function writeDbCredentialsFile(string $dbName, string $dbUser, string $dbPass, string $dumpFile): void
+    {
+        $path = $this->appDir . '/.deploy-db-credentials.txt';
+        $content = implode(PHP_EOL, [
+            'Date=' . date('c'),
+            'Domain=' . $this->domain,
+            'DB_HOST=127.0.0.1',
+            'DB_PORT=3306',
+            'DB_DATABASE=' . $dbName,
+            'DB_USERNAME=' . $dbUser,
+            'DB_PASSWORD=' . $dbPass,
+            'DUMP_FILE=' . $dumpFile,
+            '',
+        ]);
+
+        if (file_put_contents($path, $content) === false) {
+            throw new RuntimeException("Cannot write {$path}");
+        }
+        @chmod($path, 0600);
     }
 
     private function writeNginxConfig(): void
@@ -431,4 +634,3 @@ try {
     fwrite(STDERR, "[deploy][ERROR] " . $e->getMessage() . PHP_EOL);
     exit(1);
 }
-
