@@ -2,11 +2,11 @@
     <div class="container-fluid">
         <div class="pbmit-header-content d-flex justify-content-between align-items-center">
             <div class="site-branding">
-                <h1 class="site-title">
+                <div class="site-title">
                     <a href="{{ route('home') }}">
-                        <img class="logo-img mb-4" src="/logo-confortho-small-nobg.png" alt="Confortho">
+                        <img class="logo-img mb-4" src="/logo-confortho-small-nobg.png" alt="Confortho - Bandagisterie Orthopédique" width="180" height="60">
                     </a>
-                </h1>
+                </div>
             </div>
             <div class="site-navigation">
                 <nav class="main-menu navbar-expand-xl navbar-light">

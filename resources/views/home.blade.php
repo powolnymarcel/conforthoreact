@@ -1,6 +1,59 @@
 @extends('layouts.app')
 
-@section('title', 'Accueil - Confortho')
+@section('title', 'Bandagisterie & Orthopédie à Liège et Marche-en-Famenne | Confortho')
+@section('meta_description', 'Confortho, bandagisterie orthopédique à Chênée (Liège) et Aye (Marche-en-Famenne). Attelles, orthèses sur mesure, prothèses, semelles orthopédiques, fauteuils roulants, vêtements compressifs. Équipe spécialisée à votre service.')
+@section('canonical', url('/'))
+
+@push('structured-data')
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Confortho - Bandagisterie Orthopédique",
+    "description": "Bandagisterie orthopédique proposant attelles, orthèses sur mesure, prothèses, semelles orthopédiques, fauteuils roulants et vêtements compressifs.",
+    "url": "https://bandagisterie-confortho.be",
+    "logo": "https://bandagisterie-confortho.be/logo-confortho-small-nobg.png",
+    "image": "https://bandagisterie-confortho.be/logo-confortho-small-nobg.png",
+    "telephone": ["+3242635373", "+32084433740"],
+    "email": "info@bandagisterie-confortho.be",
+    "address": [
+        {
+            "@type": "PostalAddress",
+            "streetAddress": "Voie de l'Ardenne 87",
+            "addressLocality": "Embourg (Chênée)",
+            "postalCode": "4053",
+            "addressRegion": "Liège",
+            "addressCountry": "BE"
+        },
+        {
+            "@type": "PostalAddress",
+            "streetAddress": "Rue du Vivier 30",
+            "addressLocality": "Aye (Marche-en-Famenne)",
+            "postalCode": "6900",
+            "addressRegion": "Luxembourg",
+            "addressCountry": "BE"
+        }
+    ],
+    "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 50.5912,
+        "longitude": 5.6046
+    },
+    "openingHoursSpecification": [
+        {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": "Monday",
+            "description": "Sur rendez-vous"
+        }
+    ],
+    "sameAs": [
+        "https://www.facebook.com/profile.php?id=100054621498498"
+    ],
+    "priceRange": "$$",
+    "areaServed": ["Liège", "Chênée", "Embourg", "Marche-en-Famenne", "Aye"]
+}
+</script>
+@endpush
 
 @section('content')
     <div class="pbmit-slider-area pbmit-slider-six">
@@ -327,7 +380,7 @@
                 <div class="row">
                     <div class="col-md-12 col-xl-6">
                         <div class="left-area">
-                            <img src="storage/{{$section4->image}}" class="img-fluid" alt="">
+                            <img src="storage/{{$section4->image}}" class="img-fluid" alt="{{ $section4->title ?? 'Confortho - Bandagisterie' }}">
                             <div class="ihbox-style-area">
                                 <div class="pbmit-ihbox-style-28">
                                     <div class="pbmit-ihbox-headingicon">
@@ -416,7 +469,7 @@
                                 <div class="pbminfotech-post-item">
                                     <div class="pbmit-featured-img-wrapper">
                                         <div class="pbmit-featured-wrapper">
-                                            <img src="storage/{{$specialiste->picture}}" class="img-fluid" alt="">
+                                            <img src="storage/{{$specialiste->picture}}" class="img-fluid" alt="{{ $specialiste->name }} {{ $specialiste->firstname }} - {{ $specialiste->job }}">
                                         </div>
                                         </div>
                                     </div>
@@ -436,104 +489,6 @@
         </section>
         <!-- Team End -->
 
-        <style>
-            .pbmit-slider-bg {
-                background-position: center center; /* Centers the image content */
-                background-size: cover; /* Ensures the image covers the container */
-                background-repeat: no-repeat; /* Prevents repeating the image */
-                width: 100%; /* Ensures the container takes the full width */
-                height: 100%; /* Adjust based on your layout (e.g., fixed height or full viewport) */
-            }
-
-            #hot-spots {
-                margin-bottom: 0;
-                position: absolute;
-                z-index: 9;
-                width: 100%;
-                height: 100%
-            }
-
-            #hot-spots li:hover {
-                cursor: pointer
-            }
-
-
-
-
-        </style>
-
-        <style>
-            .specialty .category-title {
-                font-weight: bold;
-                font-size: 1.2rem;
-                margin-bottom: 1rem;
-            }
-
-            .specialty h1 {
-                font-size: 2rem;
-                margin-bottom: 1rem;
-            }
-
-            .specialty p {
-                font-size: 1rem;
-                margin-bottom: 2rem;
-            }
-
-            .menu-sidebar-specialities-parent-page-container {
-                margin-top: 2rem;
-            }
-
-            .menu-sidebar-specialities-parent-page .nav-link {
-                display: block;
-                padding: 0.5rem 1rem;
-                font-size: 1rem;
-                color: #28a745;
-                text-decoration: none;
-            }
-
-            .menu-sidebar-specialities-parent-page .nav-link:hover {
-                background-color: #f8f9fa;
-            }
-
-            .link-as-title span {
-                font-weight: bold;
-                color: #343a40;
-                font-size: 1.2rem;
-                margin-top: 1rem;
-                display: block;
-            }
-
-            .specialties-image {
-                background: #fff;
-                border: 1px solid #e1e1e1;
-                border-radius: 0.25rem;
-                padding: 1rem;
-                margin-top: 2rem;
-            }
-
-            .specialties-image ul {
-                list-style-type: none;
-                padding: 0;
-            }
-
-            .specialties-image li {
-                margin-bottom: 1rem;
-            }
-
-            .specialties-image li a {
-                display: block;
-                padding: 0.5rem 1rem;
-                background: #f8f9fa;
-                border-radius: 0.25rem;
-                text-decoration: none;
-                color: #007bff;
-                font-size: 1rem;
-            }
-
-            .specialties-image li a:hover {
-                background: #e2e6ea;
-            }
-        </style>
         <!-- Blog Start -->
 
 
@@ -560,10 +515,10 @@
                                             <div class="pbmit-featured-container">
                                                 <div class="pbmit-featured-img-wrapper">
                                                     <div class="pbmit-featured-wrapper">
-                                                        <img src="storage/{{$blogarticle->image}}" class="img-fluid" alt="">
+                                                        <img src="storage/{{$blogarticle->image}}" class="img-fluid" alt="{{ $blogarticle->title }}">
                                                     </div>
                                                 </div>
-                                                <a class="pbmit-blog-btn" href="#">
+                                                <a class="pbmit-blog-btn" href="{{ route('blog.details', $blogarticle->slug) }}">
 													<span class="pbmit-button-icon-wrapper">
 														<span class="pbmit-button-icon">
 															<i class="pbmit-base-icon-black-arrow-1"></i>
@@ -572,10 +527,10 @@
                                                 </a>
                                                 <div class="pbmit-meta-cat-wrapper pbmit-meta-line">
                                                     <div class="pbmit-meta-category">
-                                                        <a href="blog-classic.html" rel="category tag">{{$blogarticle->category}}</a>
+                                                        <a href="{{ route('blog') }}" rel="category tag">{{$blogarticle->category}}</a>
                                                     </div>
                                                 </div>
-                                                <a class="pbmit-link" href="blog-details.html"></a>
+                                                <a class="pbmit-link" href="{{ route('blog.details', $blogarticle->slug) }}"></a>
                                             </div>
                                             <div class="pbmit-category-date-wraper d-flex align-items-center">
                                                 <div class="pbmit-meta-date-wrapper pbmit-meta-line">
@@ -593,7 +548,7 @@
                                             </div>
                                             <div class="pbmit-content-wrapper">
                                                 <h3 class="pbmit-post-title">
-                                                    <a href="blog-details.html">{{$blogarticle->title}}</a>
+                                                    <a href="{{ route('blog.details', $blogarticle->slug) }}">{{$blogarticle->title}}</a>
                                                 </h3>
                                             </div>
                                         </div>
