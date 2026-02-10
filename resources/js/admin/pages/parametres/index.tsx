@@ -105,22 +105,28 @@ export default function Index({ settings }: Props) {
                                 <CardHeader><CardTitle>Détails de contact</CardTitle></CardHeader>
                                 <CardContent className="space-y-6">
                                     <div className="space-y-4">
-                                        <h3 className="text-sm font-semibold">Informations de contact</h3>
+                                        <h3 className="text-sm font-semibold">Informations générales</h3>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <Label>Email</Label>
                                                 <Input value={get('contact.email')} onChange={(e) => set('contact.email', e.target.value)} />
                                             </div>
-                                            <div className="space-y-2">
-                                                <Label>Téléphone</Label>
-                                                <Input value={get('contact.phone')} onChange={(e) => set('contact.phone', e.target.value)} />
-                                            </div>
                                         </div>
                                     </div>
                                     <Separator />
                                     <div className="space-y-4">
-                                        <h3 className="text-sm font-semibold">Adresse 1</h3>
-                                        <div className="grid grid-cols-3 gap-4">
+                                        <h3 className="text-sm font-semibold">Site 1 — Chaudfontaine / Chênée</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label>Nom du site</Label>
+                                                <Input value={get('contact.address1.name')} onChange={(e) => set('contact.address1.name', e.target.value)} placeholder="Ex: Confortho Chaudfontaine" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Téléphone</Label>
+                                                <Input value={get('contact.address1.phone')} onChange={(e) => set('contact.address1.phone', e.target.value)} placeholder="04 263 53 73" />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-4 gap-4">
                                             <div className="space-y-2">
                                                 <Label>Rue</Label>
                                                 <Input value={get('contact.address1.street')} onChange={(e) => set('contact.address1.street', e.target.value)} />
@@ -133,6 +139,10 @@ export default function Index({ settings }: Props) {
                                                 <Label>Code postal</Label>
                                                 <Input value={get('contact.address1.postal_code')} onChange={(e) => set('contact.address1.postal_code', e.target.value)} />
                                             </div>
+                                            <div className="space-y-2">
+                                                <Label>Ville</Label>
+                                                <Input value={get('contact.address1.city')} onChange={(e) => set('contact.address1.city', e.target.value)} placeholder="Chaudfontaine" />
+                                            </div>
                                         </div>
                                         <div className="space-y-2">
                                             <Label>URL Google Map</Label>
@@ -141,8 +151,18 @@ export default function Index({ settings }: Props) {
                                     </div>
                                     <Separator />
                                     <div className="space-y-4">
-                                        <h3 className="text-sm font-semibold">Adresse 2</h3>
-                                        <div className="grid grid-cols-3 gap-4">
+                                        <h3 className="text-sm font-semibold">Site 2 — Marche-en-Famenne</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label>Nom du site</Label>
+                                                <Input value={get('contact.address2.name')} onChange={(e) => set('contact.address2.name', e.target.value)} placeholder="Ex: Confortho Marche" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Téléphone</Label>
+                                                <Input value={get('contact.address2.phone')} onChange={(e) => set('contact.address2.phone', e.target.value)} placeholder="084 43 37 40" />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-4 gap-4">
                                             <div className="space-y-2">
                                                 <Label>Rue</Label>
                                                 <Input value={get('contact.address2.street')} onChange={(e) => set('contact.address2.street', e.target.value)} />
@@ -154,6 +174,10 @@ export default function Index({ settings }: Props) {
                                             <div className="space-y-2">
                                                 <Label>Code postal</Label>
                                                 <Input value={get('contact.address2.postal_code')} onChange={(e) => set('contact.address2.postal_code', e.target.value)} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Ville</Label>
+                                                <Input value={get('contact.address2.city')} onChange={(e) => set('contact.address2.city', e.target.value)} placeholder="Marche-en-Famenne" />
                                             </div>
                                         </div>
                                         <div className="space-y-2">
@@ -200,21 +224,38 @@ export default function Index({ settings }: Props) {
                         </TabsContent>
 
                         <TabsContent value="horaires">
-                            <Card>
-                                <CardHeader><CardTitle>Horaires</CardTitle></CardHeader>
-                                <CardContent className="space-y-4">
-                                    {['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].map((day) => (
-                                        <div key={day} className="space-y-2">
-                                            <Label className="capitalize">{day}</Label>
-                                            <Input
-                                                value={get(`horaires.${day}`)}
-                                                onChange={(e) => set(`horaires.${day}`, e.target.value)}
-                                                placeholder={`Horaires pour ${day}`}
-                                            />
-                                        </div>
-                                    ))}
-                                </CardContent>
-                            </Card>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <Card>
+                                    <CardHeader><CardTitle>Horaires — Chaudfontaine / Chênée</CardTitle></CardHeader>
+                                    <CardContent className="space-y-4">
+                                        {['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].map((day) => (
+                                            <div key={day} className="space-y-2">
+                                                <Label className="capitalize">{day}</Label>
+                                                <Input
+                                                    value={get(`horaires.chenee.${day}`)}
+                                                    onChange={(e) => set(`horaires.chenee.${day}`, e.target.value)}
+                                                    placeholder="Ex: 08:30 - 12:00 / 13:00 - 17:30"
+                                                />
+                                            </div>
+                                        ))}
+                                    </CardContent>
+                                </Card>
+                                <Card>
+                                    <CardHeader><CardTitle>Horaires — Marche-en-Famenne</CardTitle></CardHeader>
+                                    <CardContent className="space-y-4">
+                                        {['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].map((day) => (
+                                            <div key={day} className="space-y-2">
+                                                <Label className="capitalize">{day}</Label>
+                                                <Input
+                                                    value={get(`horaires.marche.${day}`)}
+                                                    onChange={(e) => set(`horaires.marche.${day}`, e.target.value)}
+                                                    placeholder="Ex: 08:30 - 12:00 / 13:00 - 17:30"
+                                                />
+                                            </div>
+                                        ))}
+                                    </CardContent>
+                                </Card>
+                            </div>
                         </TabsContent>
                     </Tabs>
                 </div>
