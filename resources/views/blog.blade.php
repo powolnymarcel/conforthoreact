@@ -83,6 +83,48 @@
                         </article>
                     @endforeach
                 </div>
+
+                @if($blogs->hasPages())
+                    <div class="row">
+                        <div class="col-12 d-flex justify-content-center mt-4">
+                            <nav aria-label="Pagination blog">
+                                <ul class="pagination">
+                                    @if ($blogs->onFirstPage())
+                                        <li class="page-item disabled" aria-disabled="true" aria-label="Précédent">
+                                            <span class="page-link" aria-hidden="true">&laquo;</span>
+                                        </li>
+                                    @else
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ $blogs->previousPageUrl() }}" rel="prev" aria-label="Précédent">&laquo;</a>
+                                        </li>
+                                    @endif
+
+                                    @foreach($blogs->getUrlRange(1, $blogs->lastPage()) as $page => $url)
+                                        @if ($page == $blogs->currentPage())
+                                            <li class="page-item active" aria-current="page">
+                                                <span class="page-link">{{ $page }}</span>
+                                            </li>
+                                        @else
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                                            </li>
+                                        @endif
+                                    @endforeach
+
+                                    @if ($blogs->hasMorePages())
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ $blogs->nextPageUrl() }}" rel="next" aria-label="Suivant">&raquo;</a>
+                                        </li>
+                                    @else
+                                        <li class="page-item disabled" aria-disabled="true" aria-label="Suivant">
+                                            <span class="page-link" aria-hidden="true">&raquo;</span>
+                                        </li>
+                                    @endif
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                @endif
             </div>
         </section>
         <!-- Blog Grid Col 2 End -->
@@ -91,4 +133,3 @@
     <!-- Contact Us Content End -->
 
 @endsection
-
